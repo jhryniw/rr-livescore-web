@@ -4,6 +4,13 @@
     align-items: stretch;
 }
 
+.title-score-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
 .red-score-section {
     background-color: #ffefef;
 }

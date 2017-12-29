@@ -8,4 +8,4 @@
 
 # FTC Relic Recovery Livescoring
 
-An web application to track scores for the Relic Recovery game.
+A web application to track scores for the Relic Recovery game.
