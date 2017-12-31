@@ -1,0 +1,65 @@
+.blue {
+    background-color: #1565c0;
+}
+
+.red {
+    background-color: #c62828;
+}
+
+.light-blue {
+    background-color: #5e92f333;
+}
+
+.light-red {
+    background-color: #ff5f5233;
+}
+
+.ss-title {
+    color: white;
+}
+
+.ss-match-label {
+    font-weight: 400;
+    font-size: 1.4em;
+    text-align: center;
+}
+
+.ss-header {
+    color: white;
+    height: 2em;
+    line-height: 2em;
+    vertical-align: middle;
+    font-size: 1.8em;
+    font-weight: bold;
+    margin-top: 0.5em;
+}
+
+.ss-flex-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.ss-subheader {
+    font-weight: 400;
+    font-size: 1.3em;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.ss-label {
+    display: inline;
+    font-weight: 400;
+    font-size: 1.4em;
+    text-align: right;
+    margin-right: 15px;
+}
+
+.ss-databox {
+    border: 2px solid black;
+    line-height: 1.4em;
+    height: 1.4em;
+    width: 12em;
+    text-align: center;
+    vertical-align: middle;
+}
