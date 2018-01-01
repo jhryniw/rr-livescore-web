@@ -35,16 +35,26 @@
     color: #5e78e0;
 }
 
+.score-box-container {
+    font-size: 0;
+    white-space: nowrap;
+    opacity: 0.825;
+    text-align: center;
+    margin: 0 -15px;
+}
+
 .red-score-box {
     background-color: #e05e5e;
     height: 15px;
     transition: width 1s;
+    display: inline-block;
 }
 
 .blue-score-box {
     background-color: #5e78e0;
     height: 15px;
     transition: width 1s;
+    display: inline-block;
 }
 
 .divider-total {
@@ -62,8 +72,8 @@
 }
 
 .App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
+    animation: App-logo-spin infinite 20s linear;
+    height: 80px;
 }
 
 .App-header {

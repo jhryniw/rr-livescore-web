@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import firebase from 'firebase';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import { getDefaultState, attachState, getJewelScore, getSafeZoneScore, getAutonomousGlyphScore, getAutonomousKeyBonus,
-         getTeleopGlyphScore, getRowBonus, getColBonus, getCipherBonus, getRelicScore, getUprightScore, getBalanceScore, getAutonomousScore, getTeleopScore
+         getTeleopGlyphScore, getRowBonus, getColBonus, getCipherBonus, getRelicScore, getUprightScore, getBalanceScore, getTotalScore
        } from '../utils/score';
 
 import '../App.css';
@@ -53,18 +53,15 @@ class LivescorePage extends Component {
         const uprightScoreBlue = getUprightScore(this.state, 'blue');
         const balanceScoreRed = getBalanceScore(this.state, 'red');
         const balanceScoreBlue = getBalanceScore(this.state, 'blue');
-        //const autonomousScoreRed = getAutonomousScore(this.state, 'red');
-        //const autonomousScoreBlue = getAutonomousScore(this.state, 'blue');
-        //const teleopScoreRed = getTeleopScore(this.state, 'red');
-        //const teleopScoreBlue = getTeleopScore(this.state, 'blue');
-        const totalRed = getTeleopScore(this.state, 'red');
-        const totalBlue = getTeleopScore(this.state, 'blue');
 
-        let redPercent = teleOpGlyphScoreRed + teleOpGlyphScoreBlue > 0
-            ? teleOpGlyphScoreRed / (teleOpGlyphScoreRed + teleOpGlyphScoreBlue) * 100
+        const totalRed = getTotalScore(this.state, 'red');
+        const totalBlue = getTotalScore(this.state, 'blue');
+
+        let redPercent = totalRed + totalBlue > 0
+            ? totalRed / (totalRed + totalBlue) * 100
             : 0;
 
-        let bluePercent = teleOpGlyphScoreRed + teleOpGlyphScoreBlue > 0 ? 100 - redPercent : 0;
+        let bluePercent = totalRed + totalBlue > 0 ? 100 - redPercent : 0;
 
         let strRedPercent = `${redPercent}%`;
         let strBluePercent = `${bluePercent}%`;
@@ -133,18 +130,18 @@ class LivescorePage extends Component {
                     <Col xs={10}>
                         <Row around="xs">
                             <Col xs={4}>
-                                <span className="red-score-total">{teleOpGlyphScoreRed}</span>
+                                <span className="red-score-total">{totalRed}</span>
                             </Col>
                             <Col xs={4}>
-                                <span className="blue-score-total">{teleOpGlyphScoreBlue}</span>
+                                <span className="blue-score-total">{totalBlue}</span>
                             </Col>
                         </Row>
                     </Col>
                 </Row>
-                <Row style={{ marginTop: 5 }}>
-                    <Col xs={2}/>
-                    <Col xs={10} style={{ position: "relative" }}>
-                        <div className="divider-total" />
+                <Row className="score-box-container" style={{ marginTop: 5 }}>
+                    <Col xsOffset={2} xs={10} style={{ position: "relative" }}>
+                        <div classID="divider"
+                             className={ redPercent !== 0 || bluePercent !== 0 ? "divider-total" : "" } />
                         <div className="red-score-box" style={{ width: strRedPercent }}/>
                         <div className="blue-score-box" style={{ width: strBluePercent }}/>
                     </Col>
