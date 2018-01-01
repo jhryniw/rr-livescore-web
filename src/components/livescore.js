@@ -7,6 +7,14 @@ import { getDefaultState, attachState, getJewelScore, getSafeZoneScore, getAuton
 
 import '../App.css';
 
+const TitleSection = (props) => (
+    <Col xs={2}>
+        <div className="title-score-section">
+            <h2>{props.title}</h2>
+        </div>
+    </Col>
+);
+
 class LivescorePage extends Component {
 
     constructor(props) {
@@ -46,6 +54,15 @@ class LivescorePage extends Component {
         const balanceScoreRed = getBalanceScore(this.state, 'red');
         const balanceScoreBlue = getBalanceScore(this.state, 'blue');
 
+        let redPercent = teleOpGlyphScoreRed + teleOpGlyphScoreBlue > 0
+            ? teleOpGlyphScoreRed / (teleOpGlyphScoreRed + teleOpGlyphScoreBlue) * 100
+            : 0;
+
+        let bluePercent = teleOpGlyphScoreRed + teleOpGlyphScoreBlue > 0 ? 100 - redPercent : 0;
+
+        let strRedPercent = `${redPercent}%`;
+        let strBluePercent = `${bluePercent}%`;
+
         return (
             <Grid fluid className="App">
                 <Row>
@@ -55,14 +72,7 @@ class LivescorePage extends Component {
                     </Col>
                 </Row>
                 <Row>
-                    <Col xs={2}>
-                        <div className="title-score-section">
-                            <h2>
-                                Autonomous<br/>
-                                Period
-                            </h2>
-                        </div>
-                    </Col>
+                    <TitleSection title="Autonomous" />
                     <Col xs={3.3} className="red-score-section">
                         <p>{jewelScoreRed}</p>
                         <p>{autonomousGlyphScoreRed}</p>
@@ -83,14 +93,7 @@ class LivescorePage extends Component {
                     </Col>
                 </Row>
                 <Row style={{marginTop: 20}}>
-                    <Col xs={2}>
-                        <div className="title-score-section">
-                            <h2>
-                                Driver<br/>
-                                Controlled
-                            </h2>
-                        </div>
-                    </Col>
+                    <TitleSection title="Driver Controlled" />
                     <Col xs={3.3} className="red-score-section">
                         <p>{teleOpGlyphScoreRed}</p>
                         <p>{rowBonusRed}</p>
@@ -117,6 +120,27 @@ class LivescorePage extends Component {
                         <p>{relicScoreBlue}</p>
                         <p>{uprightScoreBlue}</p>
                         <p>{balanceScoreBlue}</p>
+                    </Col>
+                </Row>
+                <Row style={{ marginTop: 20 }}>
+                    <TitleSection title="Total Score" />
+                    <Col xs={10}>
+                        <Row around="xs">
+                            <Col xs={4}>
+                                <span className="red-score-total">{teleOpGlyphScoreRed}</span>
+                            </Col>
+                            <Col xs={4}>
+                                <span className="blue-score-total">{teleOpGlyphScoreBlue}</span>
+                            </Col>
+                        </Row>
+                    </Col>
+                </Row>
+                <Row style={{ marginTop: 5 }}>
+                    <Col xs={2}/>
+                    <Col xs={10} style={{ position: "relative" }}>
+                        <div className="divider-total" />
+                        <div className="red-score-box" style={{ width: strRedPercent }}/>
+                        <div className="blue-score-box" style={{ width: strBluePercent }}/>
                     </Col>
                 </Row>
             </Grid>
