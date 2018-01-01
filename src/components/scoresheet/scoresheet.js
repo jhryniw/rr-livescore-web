@@ -56,7 +56,7 @@ const Scoresheet = (props) => {
     let headerClass = isBlue ? "ss-title blue" : "ss-title red";
 
     return (
-        <Grid fluid>
+        <Grid fluid style={{ textAlign: "center" }}>
             <Row center="xs" style={{ marginTop: 20, marginBottom: 20 }}>
                 <Col xs={6} className={headerClass}>
                     <h1 style={{ marginTop: 10, marginBottom: 10 }}>

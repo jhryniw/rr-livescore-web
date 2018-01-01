@@ -1,14 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 import Livescore from './components/livescore';
-import ScoreSheet from './components/scoresheet/scoresheet';
+import ScoresheetMenu from './components/scoresheet/menu';
+import Scoresheet from './components/scoresheet/scoresheet';
 import './App.css';
 
 const App = () => (
     <Router>
-        <div className="App">
+        <div>
             <Route exact path="/" component={Livescore} />
-            <Route path="/scoresheet/:match" component={ScoreSheet} />
+            <Route exact path="/scoresheet" component={ScoresheetMenu} />
+            <Route path="/scoresheet/:match" component={Scoresheet} />
         </div>
     </Router>
 );

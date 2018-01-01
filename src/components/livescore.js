@@ -47,7 +47,7 @@ class LivescorePage extends Component {
         const balanceScoreBlue = getBalanceScore(this.state, 'blue');
 
         return (
-            <Grid fluid>
+            <Grid fluid className="App">
                 <Row>
                     <Col xs={2}/>
                     <Col xs={10}>
