@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import firebase from 'firebase';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import { getDefaultState, attachState, getJewelScore, getSafeZoneScore, getAutonomousGlyphScore, getAutonomousKeyBonus,
-         getTeleopGlyphScore, getRowBonus, getColBonus, getCipherBonus, getRelicScore, getUprightScore, getBalanceScore
+         getTeleopGlyphScore, getRowBonus, getColBonus, getCipherBonus, getRelicScore, getUprightScore, getBalanceScore, getAutonomousScore, getTeleopScore
        } from '../utils/score';
 
 import '../App.css';
@@ -53,6 +53,12 @@ class LivescorePage extends Component {
         const uprightScoreBlue = getUprightScore(this.state, 'blue');
         const balanceScoreRed = getBalanceScore(this.state, 'red');
         const balanceScoreBlue = getBalanceScore(this.state, 'blue');
+        //const autonomousScoreRed = getAutonomousScore(this.state, 'red');
+        //const autonomousScoreBlue = getAutonomousScore(this.state, 'blue');
+        //const teleopScoreRed = getTeleopScore(this.state, 'red');
+        //const teleopScoreBlue = getTeleopScore(this.state, 'blue');
+        const totalRed = getTeleopScore(this.state, 'red');
+        const totalBlue = getTeleopScore(this.state, 'blue');
 
         let redPercent = teleOpGlyphScoreRed + teleOpGlyphScoreBlue > 0
             ? teleOpGlyphScoreRed / (teleOpGlyphScoreRed + teleOpGlyphScoreBlue) * 100
