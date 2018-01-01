@@ -64,7 +64,7 @@ export const getDefaultState = () => ({
 	balanceScoreBlueBack: 0,
 	balanceScoreBlueFront: 0,
 	balanceScoreRedBack: 0,
-	balanceScoreRedFront: 0
+    balanceScoreRedFront: 0
 	
 });
 
@@ -477,3 +477,25 @@ export const getBalanceScore = (state, alliance) => {
             + state.balanceScoreBlueBack;
     }
 };
+
+export const getAutonomousScore = (state, alliance) => {
+    return getAutonomousGlyphScore(state, alliance) 
+        + getAutonomousKeyBonus(state, alliance)
+        + getJewelScore(state, alliance)
+        + getSafeZoneScore(state, alliance);
+};
+
+export const getTeleopScore = (state, alliance) => {
+    return getTeleopGlyphScore(state, alliance)
+        + getRowBonus(state, alliance)
+        + getColBonus(state, alliance)
+        + getCipherBonus(state, alliance)
+        + getRelicScore(state, alliance)
+        + getUprightScore(state, alliance)
+        + getBalanceScore(state, alliance)
+}
+
+export const getTotalScore = (state, alliance) => {
+    return getAutonomousScore(state, alliance) 
+        + getTeleopScore(state, alliance);
+}
