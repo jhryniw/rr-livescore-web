@@ -23,14 +23,57 @@
     background-color: #e2e4ff;
 }
 
+.red-score-total {
+    font-size: 3.7em;
+    font-family: AvenirBold Impact sans-serif;
+    color: #e05e5e;
+}
+
+.blue-score-total {
+    font-size: 3.7em;
+    font-family: AvenirBold Impact sans-serif;
+    color: #5e78e0;
+}
+
+.score-box-container {
+    font-size: 0;
+    white-space: nowrap;
+    opacity: 0.825;
+    text-align: center;
+    margin: 0 -15px;
+}
+
+.red-score-box {
+    background-color: #e05e5e;
+    height: 15px;
+    transition: width 1s;
+    display: inline-block;
+}
+
+.blue-score-box {
+    background-color: #5e78e0;
+    height: 15px;
+    transition: width 1s;
+    display: inline-block;
+}
+
+.divider-total {
+    border: solid 1px #333;
+    width: 1px;
+    height: 45px;
+    position: absolute;
+    left: 50%;
+    top: -15px;
+}
+
 .App {
     text-align: center;
     font-family: Lato, "Helvetica", sans-serif;
 }
 
 .App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
+    animation: App-logo-spin infinite 20s linear;
+    height: 80px;
 }
 
 .App-header {

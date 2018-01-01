@@ -2,10 +2,18 @@ import React, { Component } from 'react';
 import firebase from 'firebase';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import { getDefaultState, attachState, getJewelScore, getSafeZoneScore, getAutonomousGlyphScore, getAutonomousKeyBonus,
-         getTeleopGlyphScore, getRowBonus, getColBonus, getCipherBonus, getRelicScore, getUprightScore, getBalanceScore, getAutonomousScore, getTeleopScore
+         getTeleopGlyphScore, getRowBonus, getColBonus, getCipherBonus, getRelicScore, getUprightScore, getBalanceScore, getTotalScore
        } from '../utils/score';
 
 import '../App.css';
+
+const TitleSection = (props) => (
+    <Col xs={2}>
+        <div className="title-score-section">
+            <h2>{props.title}</h2>
+        </div>
+    </Col>
+);
 
 class LivescorePage extends Component {
 
@@ -45,15 +53,21 @@ class LivescorePage extends Component {
         const uprightScoreBlue = getUprightScore(this.state, 'blue');
         const balanceScoreRed = getBalanceScore(this.state, 'red');
         const balanceScoreBlue = getBalanceScore(this.state, 'blue');
-        //const autonomousScoreRed = getAutonomousScore(this.state, 'red');
-        //const autonomousScoreBlue = getAutonomousScore(this.state, 'blue');
-        //const teleopScoreRed = getTeleopScore(this.state, 'red');
-        //const teleopScoreBlue = getTeleopScore(this.state, 'blue');
-        const totalRed = getTeleopScore(this.state, 'red');
-        const totalBlue = getTeleopScore(this.state, 'blue');
+
+        const totalRed = getTotalScore(this.state, 'red');
+        const totalBlue = getTotalScore(this.state, 'blue');
+
+        let redPercent = totalRed + totalBlue > 0
+            ? totalRed / (totalRed + totalBlue) * 100
+            : 0;
+
+        let bluePercent = totalRed + totalBlue > 0 ? 100 - redPercent : 0;
+
+        let strRedPercent = `${redPercent}%`;
+        let strBluePercent = `${bluePercent}%`;
 
         return (
-            <Grid fluid>
+            <Grid fluid className="App">
                 <Row>
                     <Col xs={2}/>
                     <Col xs={10}>
@@ -61,14 +75,7 @@ class LivescorePage extends Component {
                     </Col>
                 </Row>
                 <Row>
-                    <Col xs={2}>
-                        <div className="title-score-section">
-                            <h2>
-                                Autonomous<br/>
-                                Period
-                            </h2>
-                        </div>
-                    </Col>
+                    <TitleSection title="Autonomous" />
                     <Col xs={3.3} className="red-score-section">
                         <p>{jewelScoreRed}</p>
                         <p>{autonomousGlyphScoreRed}</p>
@@ -89,14 +96,7 @@ class LivescorePage extends Component {
                     </Col>
                 </Row>
                 <Row style={{marginTop: 20}}>
-                    <Col xs={2}>
-                        <div className="title-score-section">
-                            <h2>
-                                Driver<br/>
-                                Controlled
-                            </h2>
-                        </div>
-                    </Col>
+                    <TitleSection title="Driver Controlled" />
                     <Col xs={3.3} className="red-score-section">
                         <p>{teleOpGlyphScoreRed}</p>
                         <p>{rowBonusRed}</p>
@@ -123,6 +123,27 @@ class LivescorePage extends Component {
                         <p>{relicScoreBlue}</p>
                         <p>{uprightScoreBlue}</p>
                         <p>{balanceScoreBlue}</p>
+                    </Col>
+                </Row>
+                <Row style={{ marginTop: 20 }}>
+                    <TitleSection title="Total Score" />
+                    <Col xs={10}>
+                        <Row around="xs">
+                            <Col xs={4}>
+                                <span className="red-score-total">{totalRed}</span>
+                            </Col>
+                            <Col xs={4}>
+                                <span className="blue-score-total">{totalBlue}</span>
+                            </Col>
+                        </Row>
+                    </Col>
+                </Row>
+                <Row className="score-box-container" style={{ marginTop: 5 }}>
+                    <Col xsOffset={2} xs={10} style={{ position: "relative" }}>
+                        <div classID="divider"
+                             className={ redPercent !== 0 || bluePercent !== 0 ? "divider-total" : "" } />
+                        <div className="red-score-box" style={{ width: strRedPercent }}/>
+                        <div className="blue-score-box" style={{ width: strBluePercent }}/>
                     </Col>
                 </Row>
             </Grid>
