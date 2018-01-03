@@ -128,7 +128,7 @@ class LivescorePage extends Component {
                 <Row style={{ marginTop: 20 }}>
                     <TitleSection title="Total Score" />
                     <Col xs={10}>
-                        <Row around="xs">
+                        <Row between="xs">
                             <Col xs={4}>
                                 <span className="red-score-total">{totalRed}</span>
                             </Col>
