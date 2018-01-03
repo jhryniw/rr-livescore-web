@@ -1,11 +1,30 @@
 import React, { Component } from 'react';
 import firebase from 'firebase';
 import { Grid, Row, Col } from 'react-flexbox-grid';
+import Modal from 'react-responsive-modal';
 import { getDefaultState, attachState, getJewelScore, getSafeZoneScore, getAutonomousGlyphScore, getAutonomousKeyBonus,
          getTeleopGlyphScore, getRowBonus, getColBonus, getCipherBonus, getRelicScore, getUprightScore, getBalanceScore, getTotalScore
        } from '../utils/score';
 
 import '../App.css';
+
+const saveMatch = (matchId) => {
+    let database = firebase.database();
+    let currentMatchRef = database.ref('/current-match');
+    let savedMatchRef = database.ref(`/matches/${matchId}`);
+
+    return new Promise(resolve => {
+        currentMatchRef.once('value', (snapshot) => {
+            if (snapshot.val()) {
+                savedMatchRef.set( snapshot.val(), function(error) {
+                    if( error && typeof(console) !== 'undefined' && console.error ) {  console.error(error); }
+                });
+
+                resolve();
+            }
+        })
+    });
+};
 
 const TitleSection = (props) => (
     <Col xs={2}>
@@ -24,13 +43,57 @@ class LivescorePage extends Component {
         this.matchRoot = firebase.database().ref('/current-match');
 
         this.state = getDefaultState();
+        this.state.isAuthed = firebase.auth().currentUser != null;
+        this.state.modalOpen = false;
+        this.state.match = '';
+
+        this.onOpenModal = this.onOpenModal.bind(this);
+        this.onCloseModal = this.onCloseModal.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.onSave = this.onSave.bind(this);
     }
 
     componentWillMount() {
         this.activeRefs = attachState(this.matchRoot, this.setState.bind(this));
+
+        firebase.auth().onAuthStateChanged(
+            (user) => {
+                if(user) {
+                    this.setState({ isAuthed: true });
+                }
+                else {
+                    this.setState({ isAuthed: false });
+                }
+            });
+    }
+
+    onOpenModal() {
+        this.setState({ modalOpen: true });
+    }
+
+    handleChange(event) {
+        this.setState({ match: event.target.value });
+    }
+
+    onCloseModal() {
+        this.setState({ modalOpen: false });
+    }
+
+    onSave() {
+        console.log('saving');
+        let matchId = this.state.match;
+
+        if (matchId.length === 0) {
+            return;
+        }
+
+        saveMatch(matchId)
+            .then(() => this.setState({ match: '', modalOpen: false }));
     }
 
     render() {
+        const { modalOpen, match } = this.state;
+
         const jewelScoreRed = getJewelScore(this.state, 'red');
         const jewelScoreBlue = getJewelScore(this.state, 'blue');
         const autonomousGlyphScoreRed = getAutonomousGlyphScore(this.state, 'red');
@@ -67,86 +130,99 @@ class LivescorePage extends Component {
         let strBluePercent = `${bluePercent}%`;
 
         return (
-            <Grid fluid className="App">
-                <Row>
-                    <Col xs={2}/>
-                    <Col xs={10}>
-                        <h1 className="App-title">Live Unofficial Score</h1>
-                    </Col>
-                </Row>
-                <Row>
-                    <TitleSection title="Autonomous" />
-                    <Col xs={3.3} className="red-score-section">
-                        <p>{jewelScoreRed}</p>
-                        <p>{autonomousGlyphScoreRed}</p>
-                        <p>{autonomousKeyBonusRed}</p>
-                        <p>{safeZoneScoreRed}</p>
-                    </Col>
-                    <Col xs={3.3} className="middle-score-section">
-                        <p>Jewels</p>
-                        <p>Glyphs</p>
-                        <p>Key Column Bonus</p>
-                        <p>Safe zones</p>
-                    </Col>
-                    <Col xs={3.3} className="blue-score-section">
-                        <p>{jewelScoreBlue}</p>
-                        <p>{autonomousGlyphScoreBlue}</p>
-                        <p>{autonomousKeyBonusBlue}</p>
-                        <p>{safeZoneScoreBlue}</p>
-                    </Col>
-                </Row>
-                <Row style={{marginTop: 20}}>
-                    <TitleSection title="Driver Controlled" />
-                    <Col xs={3.3} className="red-score-section">
-                        <p>{teleOpGlyphScoreRed}</p>
-                        <p>{rowBonusRed}</p>
-                        <p>{colBonusRed}</p>
-                        <p>{cipherBonusRed}</p>
-                        <p>{relicScoreRed}</p>
-                        <p>{uprightScoreRed}</p>
-                        <p>{balanceScoreRed}</p>
-                    </Col>
-                    <Col xs={3.3} className="middle-score-section">
-                        <p>Glyphs</p>
-                        <p>Row Bonus</p>
-                        <p>Column Bonus</p>
-                        <p>Cipher Bonus</p>
-                        <p>Relic</p>
-                        <p>Upright Bonus</p>
-                        <p>Balancing Platform</p>
-                    </Col>
-                    <Col xs={3.3} className="blue-score-section">
-                        <p>{teleOpGlyphScoreBlue}</p>
-                        <p>{rowBonusBlue}</p>
-                        <p>{colBonusBlue}</p>
-                        <p>{cipherBonusBlue}</p>
-                        <p>{relicScoreBlue}</p>
-                        <p>{uprightScoreBlue}</p>
-                        <p>{balanceScoreBlue}</p>
-                    </Col>
-                </Row>
-                <Row style={{ marginTop: 20 }}>
-                    <TitleSection title="Total Score" />
-                    <Col xs={10}>
-                        <Row between="xs">
-                            <Col xs={4}>
-                                <span className="red-score-total">{totalRed}</span>
+            <div>
+                <Grid fluid className="App">
+                    <Row>
+                        <Col xsOffset={this.state.isAuthed ? 5 : 2} xs={this.state.isAuthed ? 4 : 10}>
+                            <h1 className="App-title">Live Unofficial Score</h1>
+                        </Col>
+                        { this.state.isAuthed ?
+                            <Col xs={3}>
+                                <a href="/scoresheet" style={{ lineHeight: "3.6em", marginRight: 20 }}>Scoresheets</a>
+                                <button onClick={this.onOpenModal} style={{ lineHeight: "3.6em" }}>Save Match</button>
                             </Col>
-                            <Col xs={4}>
-                                <span className="blue-score-total">{totalBlue}</span>
-                            </Col>
-                        </Row>
-                    </Col>
-                </Row>
-                <Row className="score-box-container" style={{ marginTop: 5 }}>
-                    <Col xsOffset={2} xs={10} style={{ position: "relative" }}>
-                        <div classID="divider"
-                             className={ redPercent !== 0 || bluePercent !== 0 ? "divider-total" : "" } />
-                        <div className="red-score-box" style={{ width: strRedPercent }}/>
-                        <div className="blue-score-box" style={{ width: strBluePercent }}/>
-                    </Col>
-                </Row>
-            </Grid>
+                            : <div />
+                        }
+                    </Row>
+                    <Row>
+                        <TitleSection title="Autonomous" />
+                        <Col xs={3.3} className="red-score-section">
+                            <p>{jewelScoreRed}</p>
+                            <p>{autonomousGlyphScoreRed}</p>
+                            <p>{autonomousKeyBonusRed}</p>
+                            <p>{safeZoneScoreRed}</p>
+                        </Col>
+                        <Col xs={3.3} className="middle-score-section">
+                            <p>Jewels</p>
+                            <p>Glyphs</p>
+                            <p>Key Column Bonus</p>
+                            <p>Safe zones</p>
+                        </Col>
+                        <Col xs={3.3} className="blue-score-section">
+                            <p>{jewelScoreBlue}</p>
+                            <p>{autonomousGlyphScoreBlue}</p>
+                            <p>{autonomousKeyBonusBlue}</p>
+                            <p>{safeZoneScoreBlue}</p>
+                        </Col>
+                    </Row>
+                    <Row style={{marginTop: 20}}>
+                        <TitleSection title="Driver Controlled" />
+                        <Col xs={3.3} className="red-score-section">
+                            <p>{teleOpGlyphScoreRed}</p>
+                            <p>{rowBonusRed}</p>
+                            <p>{colBonusRed}</p>
+                            <p>{cipherBonusRed}</p>
+                            <p>{relicScoreRed}</p>
+                            <p>{uprightScoreRed}</p>
+                            <p>{balanceScoreRed}</p>
+                        </Col>
+                        <Col xs={3.3} className="middle-score-section">
+                            <p>Glyphs</p>
+                            <p>Row Bonus</p>
+                            <p>Column Bonus</p>
+                            <p>Cipher Bonus</p>
+                            <p>Relic</p>
+                            <p>Upright Bonus</p>
+                            <p>Balancing Platform</p>
+                        </Col>
+                        <Col xs={3.3} className="blue-score-section">
+                            <p>{teleOpGlyphScoreBlue}</p>
+                            <p>{rowBonusBlue}</p>
+                            <p>{colBonusBlue}</p>
+                            <p>{cipherBonusBlue}</p>
+                            <p>{relicScoreBlue}</p>
+                            <p>{uprightScoreBlue}</p>
+                            <p>{balanceScoreBlue}</p>
+                        </Col>
+                    </Row>
+                    <Row style={{ marginTop: 20 }}>
+                        <TitleSection title="Total Score" />
+                        <Col xs={10}>
+                            <Row between="xs">
+                                <Col xs={4}>
+                                    <span className="red-score-total">{totalRed}</span>
+                                </Col>
+                                <Col xs={4}>
+                                    <span className="blue-score-total">{totalBlue}</span>
+                                </Col>
+                            </Row>
+                        </Col>
+                    </Row>
+                    <Row className="score-box-container" style={{ marginTop: 5 }}>
+                        <Col xsOffset={2} xs={10} style={{ position: "relative" }}>
+                            <div classID="divider"
+                                 className={ redPercent !== 0 || bluePercent !== 0 ? "divider-total" : "" } />
+                            <div className="red-score-box" style={{ width: strRedPercent }}/>
+                            <div className="blue-score-box" style={{ width: strBluePercent }}/>
+                        </Col>
+                    </Row>
+                </Grid>
+                <Modal open={modalOpen} onClose={this.onCloseModal} little>
+                    <h3>Enter the match identifier: (ex. Q2)</h3>
+                    <input type="text" value={match} onChange={this.handleChange} />
+                    <button onClick={this.onSave}>Save</button>
+                </Modal>
+            </div>
         );
     };
 
