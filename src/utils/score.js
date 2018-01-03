@@ -6,6 +6,46 @@ const BACK = 'back';
 const alliances = [RED, BLUE];
 const cryptoboxIds = [FRONT, BACK];
 
+const attachCallback = (ref, setState, strVar, type='on') => {
+    const callback = (snapshot) => {
+            if(snapshot.val()) {
+                setState({ [strVar]: snapshot.val() })
+            }
+            else {
+                setState({ [strVar]: 0 });
+            }
+        };
+
+    if (type === 'once') {
+        ref.once(
+            'value',
+            callback
+        );
+    }
+    else {
+        ref.on(
+            'value',
+            callback
+        );
+    }
+}
+
+const makeGet = (strVar) => {
+    const redFrontVar = `${strVar}RedFront`;
+    const redBackVar = `${strVar}RedBack`;
+    const blueFrontVar = `${strVar}BlueFront`;
+    const blueBackVar = `${strVar}BlueBack`;
+
+    return (state, alliance) => {
+        if (alliance === RED) {
+            return state[redFrontVar] + state[redBackVar];
+        }
+        else {
+            return state[blueFrontVar] + state[blueBackVar];
+        }
+    }
+}
+
 export const getDefaultState = () => ({
     jewelBlueFrontBlue: 0,
     jewelBlueFrontRed: 0,
@@ -64,7 +104,76 @@ export const getDefaultState = () => ({
 	balanceScoreBlueBack: 0,
 	balanceScoreBlueFront: 0,
 	balanceScoreRedBack: 0,
-    balanceScoreRedFront: 0
+    balanceScoreRedFront: 0,
+	
+    jewelCountBlueFrontBlue: 0,
+    jewelCountBlueFrontRed: 0,
+    jewelCountBlueBackBlue: 0,
+    jewelCountBlueBackRed: 0,
+    jewelCountRedFrontBlue: 0,
+    jewelCountRedFrontRed: 0,
+    jewelCountRedBackBlue: 0,
+    jewelCountRedBackRed: 0,
+	
+	autonomousGlyphCountBlueBack: 0,
+	autonomousGlyphCountBlueFront: 0,
+	autonomousGlyphCountRedBack: 0,
+	autonomousGlyphCountRedFront: 0,
+	
+	keyColumnBonusCountBlueBack: 0,
+	keyColumnBonusCountBlueFront: 0,
+	keyColumnBonusCountRedBack: 0,
+	keyColumnBonusCountRedFront: 0,
+	
+	safeZoneCountBlueBack: 0,
+	safeZoneCountBlueFront: 0,
+	safeZoneCountRedBack: 0,
+	safeZoneCountRedFront: 0,
+	
+	teleopGlyphCountBlueBack: 0,
+	teleopGlyphCountBlueFront: 0,
+	teleopGlyphCountRedBack: 0,
+	teleopGlyphCountRedFront: 0,
+	
+	rowBonusCountBlueBack: 0,
+	rowBonusCountBlueFront: 0,
+	rowBonusCountRedBack: 0,
+	rowBonusCountRedFront: 0,
+	
+	colBonusCountBlueBack: 0,
+	colBonusCountBlueFront: 0,
+	colBonusCountRedBack: 0,
+	colBonusCountRedFront: 0,
+	
+	cipherBonusCountBlueBack: 0,
+	cipherBonusCountBlueFront: 0,
+	cipherBonusCountRedBack: 0,
+	cipherBonusCountRedFront: 0,
+	
+	relicZone1CountBlueBack: 0,
+	relicZone1CountBlueFront: 0,
+	relicZone1CountRedBack: 0,
+	relicZone1CountRedFront: 0,
+	
+	relicZone2CountBlueBack: 0,
+	relicZone2CountBlueFront: 0,
+	relicZone2CountRedBack: 0,
+	relicZone2CountRedFront: 0,
+	
+	relicZone3CountBlueBack: 0,
+	relicZone3CountBlueFront: 0,
+	relicZone3CountRedBack: 0,
+	relicZone3CountRedFront: 0,
+	
+	uprightCountBlueBack: 0,
+	uprightCountBlueFront: 0,
+	uprightCountRedBack: 0,
+	uprightCountRedFront: 0,
+	
+	balanceCountBlueBack: 0,
+	balanceCountBlueFront: 0,
+	balanceCountRedBack: 0,
+    balanceCountRedFront: 0
 	
 });
 
@@ -79,7 +188,9 @@ export const attachState = (rootRef, setState) => {
 const attachAllListeners = (rootRef, setState) => {
     let refs = [];
     for (let a of alliances) {
+        let strAlliance = a === BLUE ? 'Blue' : 'Red';
         for (let id of cryptoboxIds) {
+            let strId = id === FRONT ? 'Front' : 'Back';
             refs.push(attachAutonomousGlyphListener(rootRef, setState, a, id));
             refs.push(attachAutonomousKeyListener(rootRef, setState, a, id));
             refs.push(attachSafeZoneListener(rootRef, setState, a, id));
@@ -90,8 +201,24 @@ const attachAllListeners = (rootRef, setState) => {
             refs.push(attachRelicListener(rootRef, setState, a, id));
             refs.push(attachUprightListener(rootRef, setState, a, id));
             refs.push(attachBalanceListener(rootRef, setState, a, id));
+
+            refs.push(attachCallback(rootRef, setState, `autonomousGlyphCount${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `keyColumnBonusCount${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `safeZoneCount${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `teleopGlyphCount${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `rowBonusCount${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `colBonusCount${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `cipherBonusCount${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `relicZone1Count${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `relicZone2Count${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `relicZone3Count${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `uprightCount${strAlliance}${strId}`, 'once'));
+            refs.push(attachCallback(rootRef, setState, `balanceCount${strAlliance}${strId}`, 'once'));
             for (let sa of alliances) {
+                let strScoreAlliance = sa === BLUE ? 'Blue' : 'Red';
                 refs.push(attachJewelListener(rootRef, setState, a, id, sa));
+                
+                refs.push(attachCallback(rootRef, setState, `jewelCount${strAlliance}${strId}${strScoreAlliance}`, 'once'));
             }
         }
     }
@@ -477,6 +604,34 @@ export const getBalanceScore = (state, alliance) => {
             + state.balanceScoreBlueBack;
     }
 };
+
+export const getJewelCount = (state, alliance) => {
+    if (alliance === RED) {
+        return state.jewelCountBlueFrontRed
+             + state.jewelCountBlueBackRed
+             + state.jewelCountRedFrontRed
+             + state.jewelCountRedBackRed;
+    }
+    else {
+        return state.jewelCountBlueFrontBlue
+            + state.jewelCountBlueBackBlue
+            + state.jewelCountRedFrontBlue
+            + state.jewelCountRedBackBlue;
+    }
+};
+
+export const getAutonomousGlyphCount = makeGet("autonomousGlyphCount");
+export const getKeyColumnBonusCount = makeGet("keyColumnBonusCount");
+export const getSafeZoneCount = makeGet("safeZoneCount");
+export const getTeleopGlyphCount = makeGet("teleopGlyphCount");
+export const getRowBonusCount = makeGet("rowBonusCount");
+export const getColBonusCount = makeGet("colBonusCount");
+export const getCipherBonusCount = makeGet("cipherBonusCount");
+export const getRelicZone1Count = makeGet("relicZone1Count");
+export const getRelicZone2Count = makeGet("relicZone2Count");
+export const getRelicZone3Count = makeGet("relicZone3Count");
+export const getUprightBonusCount = makeGet("uprightBonusCount");
+export const getBalanceCount = makeGet("balanceCount");
 
 export const getAutonomousScore = (state, alliance) => {
     return getAutonomousGlyphScore(state, alliance) 
