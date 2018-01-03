@@ -6,6 +6,64 @@ const BACK = 'back';
 const alliances = [RED, BLUE];
 const cryptoboxIds = [FRONT, BACK];
 
+const getVarName = (alliance, id, varName, countId) => {
+    if (countId !== 'count') {
+        let camelCountId = countId.charAt(0).toUpperCase() + countId.slice(1);
+        return varName + alliance + id + camelCountId;
+    }
+    
+    return varName + alliance + id;
+}
+
+const attachCallback = (rootRef, setState, alliance, id, varName, countId, type='on') => {
+    let path = [alliance.toLowerCase(), id.toLowerCase(), varName, countId].join('/');
+    let strVar = getVarName(alliance, id, varName, countId);
+    let ref = rootRef.child(path);
+
+    console.log(path);
+
+    let callback = (snapshot) => {
+        console.log(snapshot.val());
+            if(snapshot.val()) {
+                console.log('Filling', strVar);
+                setState({ [strVar]: snapshot.val() });
+            }
+            else {
+                setState({ [strVar]: 0 });
+            }
+        };
+
+    if (type === 'once') {
+        ref.once(
+            'value',
+            callback
+        );
+    }
+    else {
+        ref.on(
+            'value',
+            callback
+        );
+    }
+}
+
+const makeGet = (varName, countId='count') => {
+    const redFrontVar = getVarName('Red', 'Front', varName, countId);
+    const redBackVar = getVarName('Red', 'Back', varName, countId);
+    const blueFrontVar = getVarName('Blue', 'Front', varName, countId);
+    const blueBackVar = getVarName('Blue', 'Back', varName, countId);
+
+    return (state, alliance) => {
+        if (alliance === RED) {
+            console.log(redFrontVar, redBackVar, state[redFrontVar], state[redBackVar]);
+            return state[redFrontVar] + state[redBackVar];
+        }
+        else {
+            return state[blueFrontVar] + state[blueBackVar];
+        }
+    }
+}
+
 export const getDefaultState = () => ({
     jewelBlueFrontBlue: 0,
     jewelBlueFrontRed: 0,
@@ -64,7 +122,76 @@ export const getDefaultState = () => ({
 	balanceScoreBlueBack: 0,
 	balanceScoreBlueFront: 0,
 	balanceScoreRedBack: 0,
-    balanceScoreRedFront: 0
+    balanceScoreRedFront: 0,
+	
+    jewelBlueFrontBlueCount: 0,
+    jewelBlueFrontRedCount: 0,
+    jewelBlueBackBlueCount: 0,
+    jewelBlueBackRedCount: 0,
+    jewelRedFrontBlueCount: 0,
+    jewelRedFrontRedCount: 0,
+    jewelRedBackBlueCount: 0,
+    jewelRedBackRedCount: 0,
+	
+	autonomousCryptoboxBlueBackAutonomousGlyphCount: 0,
+	autonomousCryptoboxBlueFrontAutonomousGlyphCount: 0,
+	autonomousCryptoboxRedBackAutonomousGlyphCount: 0,
+	autonomousCryptoboxRedFrontAutonomousGlyphCount: 0,
+	
+	autonomousCryptoboxBlueBackKeyColumnCount: 0,
+	autonomousCryptoboxBlueFrontKeyColumnCount: 0,
+	autonomousCryptoboxRedBackKeyColumnCount: 0,
+	autonomousCryptoboxRedFrontKeyColumnCount: 0,
+	
+	safeZoneBlueBackCount: 0,
+	safeZoneBlueFrontCount: 0,
+	safeZoneRedBackCount: 0,
+	safeZoneRedFrontCount: 0,
+	
+	teleopCryptoboxBlueBackTeleopGlyphCount: 0,
+	teleopCryptoboxBlueFrontTeleopGlyphCount: 0,
+	teleopCryptoboxRedBackTeleopGlyphCount: 0,
+	teleopCryptoboxRedFrontTeleopGlyphCount: 0,
+	
+	teleopCryptoboxBlueBackRowCount: 0,
+	teleopCryptoboxBlueFrontRowCount: 0,
+	teleopCryptoboxRedBackRowCount: 0,
+	teleopCryptoboxRedFrontRowCount: 0,
+	
+	teleopCryptoboxBlueBackColCount: 0,
+	teleopCryptoboxBlueFrontColCount: 0,
+	teleopCryptoboxRedBackColCount: 0,
+	teleopCryptoboxRedFrontColCount: 0,
+	
+	teleopCryptoboxBlueBackCipherCount: 0,
+	teleopCryptoboxBlueFrontCipherCount: 0,
+	teleopCryptoboxRedBackCipherCount: 0,
+	teleopCryptoboxRedFrontCipherCount: 0,
+	
+	relicBlueBackZone1Count: 0,
+	relicBlueFrontZone1Count: 0,
+	relicRedBackZone1Count: 0,
+	relicRedFrontZone1Count: 0,
+	
+	relicBlueBackZone2Count: 0,
+	relicBlueFrontZone2Count: 0,
+	relicRedBackZone2Count: 0,
+	relicRedFrontZone2Count: 0,
+	
+	relicBlueBackZone3Count: 0,
+	relicBlueFrontZone3Count: 0,
+	relicRedBackZone3Count: 0,
+	relicRedFrontZone3Count: 0,
+	
+	uprightBlueBackCount: 0,
+	uprightBlueFrontCount: 0,
+	uprightRedBackCount: 0,
+	uprightRedFrontCount: 0,
+	
+	balanceBlueBackCount: 0,
+	balanceBlueFrontCount: 0,
+	balanceRedBackCount: 0,
+    balanceRedFrontCount: 0
 	
 });
 
@@ -79,7 +206,9 @@ export const attachState = (rootRef, setState) => {
 const attachAllListeners = (rootRef, setState) => {
     let refs = [];
     for (let a of alliances) {
+        let strAlliance = a === BLUE ? 'Blue' : 'Red';
         for (let id of cryptoboxIds) {
+            let strId = id === FRONT ? 'Front' : 'Back';
             refs.push(attachAutonomousGlyphListener(rootRef, setState, a, id));
             refs.push(attachAutonomousKeyListener(rootRef, setState, a, id));
             refs.push(attachSafeZoneListener(rootRef, setState, a, id));
@@ -90,6 +219,22 @@ const attachAllListeners = (rootRef, setState) => {
             refs.push(attachRelicListener(rootRef, setState, a, id));
             refs.push(attachUprightListener(rootRef, setState, a, id));
             refs.push(attachBalanceListener(rootRef, setState, a, id));
+
+            attachCallback(rootRef, setState, strAlliance, strId, 'jewel', 'redCount', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'jewel', 'blueCount', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'autonomousCryptobox', 'autonomousGlyphCount', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'autonomousCryptobox', 'keyColumnCount', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'safeZone', 'count', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'teleopCryptobox', 'teleopGlyphCount', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'teleopCryptobox', 'rowCount', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'teleopCryptobox', 'colCount', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'teleopCryptobox', 'cipherCount', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'relic', 'zone1Count', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'relic', 'zone2Count', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'relic', 'zone3Count', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'upright', 'count', 'once');
+            attachCallback(rootRef, setState, strAlliance, strId, 'balance', 'count', 'once');
+
             for (let sa of alliances) {
                 refs.push(attachJewelListener(rootRef, setState, a, id, sa));
             }
@@ -107,8 +252,6 @@ const attachJewelListener = (rootRef, setState, alliance, id, scoreAlliance) => 
     let strId = id === FRONT ? 'Front' : 'Back';
     let strScoreAlliance = scoreAlliance === BLUE ? 'Blue' : 'Red';
     var strVar = `jewel${strAlliance}${strId}${strScoreAlliance}`;
-	
-	//console.log(path);
 
     ref.on(
         'value',
@@ -477,6 +620,34 @@ export const getBalanceScore = (state, alliance) => {
             + state.balanceScoreBlueBack;
     }
 };
+
+export const getJewelCount = (state, alliance) => {
+    if (alliance === RED) {
+        return state.jewelBlueFrontRedCount
+             + state.jewelBlueBackRedCount
+             + state.jewelRedFrontRedCount
+             + state.jewelRedBackRedCount;
+    }
+    else {
+        return state.jewelBlueFrontBlueCount
+            + state.jewelBlueBackBlueCount
+            + state.jewelRedFrontBlueCount
+            + state.jewelRedBackBlueCount;
+    }
+};
+
+export const getAutonomousGlyphCount = makeGet("autonomousCryptobox", "autonomousGlyphCount");
+export const getKeyColumnBonusCount = makeGet("autonomousCryptobox", "keyColumnCount");
+export const getSafeZoneCount = makeGet("safeZone");
+export const getTeleopGlyphCount = makeGet("teleopCryptobox", "teleopGlyphCount");
+export const getRowBonusCount = makeGet("teleopCryptobox", "rowCount");
+export const getColBonusCount = makeGet("teleopCryptobox", "colCount");
+export const getCipherBonusCount = makeGet("teleopCryptobox", "cipherCount");
+export const getRelicZone1Count = makeGet("relic", "zone1Count");
+export const getRelicZone2Count = makeGet("relic", "zone2Count");
+export const getRelicZone3Count = makeGet("relic", "zone3Count");
+export const getUprightBonusCount = makeGet("upright");
+export const getBalanceCount = makeGet("balance");
 
 export const getAutonomousScore = (state, alliance) => {
     return getAutonomousGlyphScore(state, alliance) 
