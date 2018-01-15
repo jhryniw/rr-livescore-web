@@ -13,25 +13,25 @@ const getVarName = (alliance, id, varName, countId) => {
     }
     
     return varName + alliance + id;
-}
+};
+
+const getCallback = (setState, strVar) => {
+    return (snapshot) => {
+        if(snapshot.val()) {
+            setState({ [strVar]: snapshot.val() });
+        }
+        else {
+            setState({ [strVar]: 0 });
+        }
+    };
+};
 
 const attachCallback = (rootRef, setState, alliance, id, varName, countId, type='on') => {
-    let path = [alliance.toLowerCase(), id.toLowerCase(), varName, countId].join('/');
-    let strVar = getVarName(alliance, id, varName, countId);
-    let ref = rootRef.child(path);
+    const path = [alliance.toLowerCase(), id.toLowerCase(), varName, countId].join('/');
+    const strVar = getVarName(alliance, id, varName, countId);
+    const ref = rootRef.child(path);
 
-    console.log(path);
-
-    let callback = (snapshot) => {
-        console.log(snapshot.val());
-            if(snapshot.val()) {
-                console.log('Filling', strVar);
-                setState({ [strVar]: snapshot.val() });
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        };
+    const callback = getCallback(setState, strVar);
 
     if (type === 'once') {
         ref.once(
@@ -45,7 +45,7 @@ const attachCallback = (rootRef, setState, alliance, id, varName, countId, type=
             callback
         );
     }
-}
+};
 
 const makeGet = (varName, countId='count') => {
     const redFrontVar = getVarName('Red', 'Front', varName, countId);
@@ -62,6 +62,11 @@ const makeGet = (varName, countId='count') => {
             return state[blueFrontVar] + state[blueBackVar];
         }
     }
+};
+
+function Node(ref, callback) {
+    this.ref = ref;
+    this.callback = callback;
 }
 
 export const getDefaultState = () => ({
@@ -196,29 +201,29 @@ export const getDefaultState = () => ({
 });
 
 export const attachState = (rootRef, setState) => {
-    let refs = [];
+    const nodes = [];
 
-    refs.push.apply(refs, attachAllListeners(rootRef, setState));
+    nodes.push.apply(nodes, attachAllListeners(rootRef, setState));
 
-    return refs;
+    return nodes;
 };
 
 const attachAllListeners = (rootRef, setState) => {
-    let refs = [];
+    let nodes = [];
     for (let a of alliances) {
         let strAlliance = a === BLUE ? 'Blue' : 'Red';
         for (let id of cryptoboxIds) {
             let strId = id === FRONT ? 'Front' : 'Back';
-            refs.push(attachAutonomousGlyphListener(rootRef, setState, a, id));
-            refs.push(attachAutonomousKeyListener(rootRef, setState, a, id));
-            refs.push(attachSafeZoneListener(rootRef, setState, a, id));
-            refs.push(attachTeleopGlyphListener(rootRef, setState, a, id));
-            refs.push(attachRowListener(rootRef, setState, a, id));
-            refs.push(attachColumnListener(rootRef, setState, a, id));
-            refs.push(attachCipherListener(rootRef, setState, a, id));
-            refs.push(attachRelicListener(rootRef, setState, a, id));
-            refs.push(attachUprightListener(rootRef, setState, a, id));
-            refs.push(attachBalanceListener(rootRef, setState, a, id));
+            nodes.push(attachAutonomousGlyphListener(rootRef, setState, a, id));
+            nodes.push(attachAutonomousKeyListener(rootRef, setState, a, id));
+            nodes.push(attachSafeZoneListener(rootRef, setState, a, id));
+            nodes.push(attachTeleopGlyphListener(rootRef, setState, a, id));
+            nodes.push(attachRowListener(rootRef, setState, a, id));
+            nodes.push(attachColumnListener(rootRef, setState, a, id));
+            nodes.push(attachCipherListener(rootRef, setState, a, id));
+            nodes.push(attachRelicListener(rootRef, setState, a, id));
+            nodes.push(attachUprightListener(rootRef, setState, a, id));
+            nodes.push(attachBalanceListener(rootRef, setState, a, id));
 
             attachCallback(rootRef, setState, strAlliance, strId, 'jewel', 'redCount', 'once');
             attachCallback(rootRef, setState, strAlliance, strId, 'jewel', 'blueCount', 'once');
@@ -236,12 +241,12 @@ const attachAllListeners = (rootRef, setState) => {
             attachCallback(rootRef, setState, strAlliance, strId, 'balance', 'count', 'once');
 
             for (let sa of alliances) {
-                refs.push(attachJewelListener(rootRef, setState, a, id, sa));
+                nodes.push(attachJewelListener(rootRef, setState, a, id, sa));
             }
         }
     }
 
-    return refs;
+    return nodes;
 };
 
 const attachJewelListener = (rootRef, setState, alliance, id, scoreAlliance) => {
@@ -253,19 +258,14 @@ const attachJewelListener = (rootRef, setState, alliance, id, scoreAlliance) => 
     let strScoreAlliance = scoreAlliance === BLUE ? 'Blue' : 'Red';
     var strVar = `jewel${strAlliance}${strId}${strScoreAlliance}`;
 
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 
 const attachAutonomousGlyphListener = (rootRef, setState, alliance, id, scoreAlliance) => {
@@ -275,20 +275,15 @@ const attachAutonomousGlyphListener = (rootRef, setState, alliance, id, scoreAll
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar= `autonomousGlyphScore${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 
 const attachAutonomousKeyListener = (rootRef, setState, alliance, id, scoreAlliance) => {
@@ -298,20 +293,15 @@ const attachAutonomousKeyListener = (rootRef, setState, alliance, id, scoreAllia
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar= `keyColumnBonus${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 
 const attachSafeZoneListener = (rootRef, setState, alliance, id, scoreAlliance) => {
@@ -321,20 +311,15 @@ const attachSafeZoneListener = (rootRef, setState, alliance, id, scoreAlliance) 
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar = `safeZone${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 
 const attachTeleopGlyphListener = (rootRef, setState, alliance, id, scoreAlliance) => {
@@ -344,20 +329,15 @@ const attachTeleopGlyphListener = (rootRef, setState, alliance, id, scoreAllianc
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar = `teleopGlyphScore${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 const attachRowListener = (rootRef, setState, alliance, id, scoreAlliance) => {
     let path = `${alliance}/${id}/teleopCryptobox/rowBonus`;
@@ -366,20 +346,15 @@ const attachRowListener = (rootRef, setState, alliance, id, scoreAlliance) => {
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar = `rowBonus${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 const attachColumnListener = (rootRef, setState, alliance, id, scoreAlliance) => {
     let path = `${alliance}/${id}/teleopCryptobox/colBonus`;
@@ -388,20 +363,15 @@ const attachColumnListener = (rootRef, setState, alliance, id, scoreAlliance) =>
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar = `colBonus${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 const attachCipherListener = (rootRef, setState, alliance, id, scoreAlliance) => {
     let path = `${alliance}/${id}/teleopCryptobox/cipherBonus`;
@@ -410,20 +380,15 @@ const attachCipherListener = (rootRef, setState, alliance, id, scoreAlliance) =>
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar = `cipherBonus${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 const attachRelicListener = (rootRef, setState, alliance, id, scoreAlliance) => {
     let path = `${alliance}/${id}/relic/score`;
@@ -432,20 +397,15 @@ const attachRelicListener = (rootRef, setState, alliance, id, scoreAlliance) => 
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar = `relicScore${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 
 const attachUprightListener = (rootRef, setState, alliance, id, scoreAlliance) => {
@@ -455,20 +415,15 @@ const attachUprightListener = (rootRef, setState, alliance, id, scoreAlliance) =
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar = `uprightScore${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 
 const attachBalanceListener = (rootRef, setState, alliance, id, scoreAlliance) => {
@@ -478,20 +433,15 @@ const attachBalanceListener = (rootRef, setState, alliance, id, scoreAlliance) =
     let strAlliance = alliance === BLUE ? 'Blue' : 'Red';
     let strId = id === FRONT ? 'Front' : 'Back';
     var strVar = `balanceScore${strAlliance}${strId}`;
-	
+
+    const callback = getCallback(setState, strVar);
+
     ref.on(
         'value',
-        (snapshot) => {
-            if(snapshot.val()) {
-                setState({ [strVar]: snapshot.val() })
-            }
-            else {
-                setState({ [strVar]: 0 });
-            }
-        }
+        callback
     );
 
-    return ref;
+    return new Node(ref, callback);
 };
 
 export const getJewelScore = (state, alliance) => {
@@ -664,9 +614,9 @@ export const getTeleopScore = (state, alliance) => {
         + getRelicScore(state, alliance)
         + getUprightScore(state, alliance)
         + getBalanceScore(state, alliance)
-}
+};
 
 export const getTotalScore = (state, alliance) => {
     return getAutonomousScore(state, alliance) 
         + getTeleopScore(state, alliance);
-}
+};
