@@ -3,10 +3,22 @@ import firebase from 'firebase';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import Modal from 'react-responsive-modal';
 import { getDefaultState, attachState, getJewelScore, getSafeZoneScore, getAutonomousGlyphScore, getAutonomousKeyBonus,
-         getTeleopGlyphScore, getRowBonus, getColBonus, getCipherBonus, getRelicScore, getUprightScore, getBalanceScore, getTotalScore
+         getTeleopGlyphScore, getRowBonus, getColBonus, getCipherBonus, getRelicScore, getUprightScore, getBalanceScore,
+         getAutonomousScore, getTeleopScore, getTotalScore
        } from '../utils/score';
 
 import '../App.css';
+
+const getPercentages = (totalRed, totalBlue) => {
+    const redPercent = totalRed + totalBlue > 0
+        ? totalRed / (totalRed + totalBlue) * 100
+        : 0;
+
+    const bluePercent = totalRed + totalBlue > 0 ? 100 - redPercent : 0;
+
+    // Return as percentage strings
+    return [redPercent, bluePercent, `${redPercent}%`, `${bluePercent}%`];
+};
 
 const saveMatch = (matchId) => {
     let database = firebase.database();
@@ -34,18 +46,96 @@ const TitleSection = (props) => (
     </Col>
 );
 
+const ScoreSection = ({ redScore, blueScore }) => (
+    <Col xs={10}>
+        <Row center="xs" style={{ alignItems: "stretch" }}>
+            <Col xs={5}>
+                <span style={{display: "block"}} className="red-score-total">{redScore}</span>
+            </Col>
+            <Col xs={5}>
+                <span className="blue-score-total">{blueScore}</span>
+            </Col>
+        </Row>
+    </Col>
+);
+
+export class MiniLivescore extends Component {
+
+    constructor(props) {
+        super(props);
+        this.activeNodes = [];
+
+        this.matchRoot = firebase.database().ref('/current-match');
+
+        this.state = getDefaultState();
+        this.setState = this.setState.bind(this);
+    }
+
+    componentWillMount() {
+        this.activeNodes = attachState(this.matchRoot, this.setState);
+    }
+
+    render() {
+        const autoRed = getAutonomousScore(this.state, 'red');
+        const autoBlue = getAutonomousScore(this.state, 'blue');
+
+        const teleRed = getTeleopScore(this.state, 'red');
+        const teleBlue = getTeleopScore(this.state, 'blue');
+
+        const totalRed = getTotalScore(this.state, 'red');
+        const totalBlue = getTotalScore(this.state, 'blue');
+
+        const [strRedPercent, strBluePercent] = getPercentages(totalRed, totalBlue).slice(2);
+
+        return (
+            <div>
+                <Grid fluid className="App">
+                    <Row>
+                        <Col xsOffset={2} xs={10}>
+                            <h1 className="App-title">Live Unofficial Score</h1>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <TitleSection title="Auto"/>
+                        <ScoreSection redScore={autoRed} blueScore={autoBlue} />
+                    </Row>
+                    <Row style={{marginTop: 20}}>
+                        <TitleSection title="Driver"/>
+                        <ScoreSection redScore={teleRed} blueScore={teleBlue} />
+                    </Row>
+                    <Row style={{marginTop: 20}}>
+                        <TitleSection title="Total"/>
+                        <ScoreSection redScore={totalRed} blueScore={totalBlue} />
+                    </Row>
+                    <Row className="score-box-container" style={{ marginTop: 10, marginRight: -15 }}>
+                        <Col xsOffset={2} xs={10}>
+                            <div className="red-score-box" style={{width: strRedPercent}}/>
+                            <div className="blue-score-box" style={{width: strBluePercent}}/>
+                        </Col>
+                    </Row>
+                </Grid>
+            </div>
+        );
+    };
+
+    componentWillUnmount() {
+        this.activeNodes.forEach(node => node.ref.off('value', node.callback));
+        this.activeNodes = [];
+    }
+}
+
 class LivescorePage extends Component {
 
     constructor(props) {
         super(props);
-        this.activeRefs = [];
-
-        this.matchRoot = firebase.database().ref('/current-match');
+        this.activeNodes = [];
 
         this.state = getDefaultState();
         this.state.isAuthed = firebase.auth().currentUser != null;
         this.state.modalOpen = false;
         this.state.match = '';
+
+        this.matchRoot = firebase.database().ref('/current-match');
 
         this.onOpenModal = this.onOpenModal.bind(this);
         this.onCloseModal = this.onCloseModal.bind(this);
@@ -54,7 +144,7 @@ class LivescorePage extends Component {
     }
 
     componentWillMount() {
-        this.activeRefs = attachState(this.matchRoot, this.setState.bind(this));
+        this.activeNodes = attachState(this.matchRoot, this.setState.bind(this));
 
         firebase.auth().onAuthStateChanged(
             (user) => {
@@ -120,14 +210,7 @@ class LivescorePage extends Component {
         const totalRed = getTotalScore(this.state, 'red');
         const totalBlue = getTotalScore(this.state, 'blue');
 
-        let redPercent = totalRed + totalBlue > 0
-            ? totalRed / (totalRed + totalBlue) * 100
-            : 0;
-
-        let bluePercent = totalRed + totalBlue > 0 ? 100 - redPercent : 0;
-
-        let strRedPercent = `${redPercent}%`;
-        let strBluePercent = `${bluePercent}%`;
+        const [redPercent, bluePercent, strRedPercent, strBluePercent] = getPercentages(totalRed, totalBlue);
 
         return (
             <div>
@@ -145,7 +228,7 @@ class LivescorePage extends Component {
                         }
                     </Row>
                     <Row>
-                        <TitleSection title="Autonomous" />
+                        <TitleSection title="Auto Period" />
                         <Col xs={3.3} className="red-score-section">
                             <p>{jewelScoreRed}</p>
                             <p>{autonomousGlyphScoreRed}</p>
@@ -227,8 +310,8 @@ class LivescorePage extends Component {
     };
 
     componentWillUnmount() {
-        this.activeRefs.forEach((l => l.off('value')));
-        this.activeRefs = [];
+        this.activeNodes.forEach(node => node.ref.off('value', node.callback));
+        this.activeNodes = [];
     }
 }
 
